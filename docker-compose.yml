@@ -1,0 +1,132 @@
+version: '3.8'
+
+services:
+
+  # ------------------------------------
+  # 1. Base de Datos PostgreSQL
+  #    Acceso para la red interna: Host=db, Puerto: 5432
+  #    Acceso desde tu maquina (DBeaver): Host=localhost, Puerto: 5432
+  # ------------------------------------
+  db:
+    image: postgres:15-alpine
+    container_name: postgres_db
+    restart: always
+    environment:
+      # Asegurate que estos valores coincidan con tu archivo .env o DBeaver
+      POSTGRES_DB: mydatabase
+      POSTGRES_USER: myuser
+      POSTGRES_PASSWORD: mypassword
+    ports:
+      - "5432:5432" 
+    volumes:
+      - postgres_data:/var/lib/postgresql/data 
+
+  # ------------------------------------
+  # 2. Broker de Mensajes RabbitMQ
+  #    Acceso para la red interna: Host=rabbitmq, Puerto: 5672
+  # ------------------------------------
+  rabbitmq:
+    image: rabbitmq:3.12-management
+    container_name: rabbitmq_broker
+    restart: always
+    ports:
+      - "5672:5672"   # AMQP (mensajeria)
+      - "15672:15672" # Interfaz web de gestion (http://localhost:15672)
+    environment:
+      RABBITMQ_DEFAULT_USER: guest
+      RABBITMQ_DEFAULT_PASS: guest
+
+  # ------------------------------------
+  # 3. Microservicio API (FileIngestor.API)
+  #    Acceso desde tu maquina: Host=localhost, Puerto: 8080/swagger
+  # ------------------------------------
+  fileingestor-api:
+    image: fileingestorapi 
+    build:
+      context: .
+      dockerfile: FileIngestor.API/Dockerfile
+    container_name: fileingestor_api
+    restart: always
+    ports:
+      - "8081:80" 
+    depends_on:
+      - db
+      - rabbitmq
+    environment:
+    # 1. Fuerza el entorno de Desarrollo para habilitar Swagger y logs detallados.
+      ASPNETCORE_ENVIRONMENT: Development  
+    # Configuracion final para que Kestrel escuche en el puerto 80 del contenedor
+      ASPNETCORE_URLS: http://+:80
+      # Cadenas de conexion (usan los nombres de servicio internos: 'db' y 'rabbitmq')
+      ConnectionStrings:DefaultConnection: "Host=db;Port=5432;Database=mydatabase;Username=myuser;Password=mypassword"
+      # RabbitMQ:ConnectionString: "amqp://guest:guest@rabbitmq:5672"
+      # RabbitMqSettings:Host: "rabbitmq"
+      # RabbitMqSettings:UserName: guest
+      # RabbitMqSettings:Password: guest
+      rabbitmq:host: "rabbitmq"
+      rabbitmq:port: 5672
+      rabbitmq:username: guest
+      rabbitmq:password: guest
+
+      JwtSettings__Secret: "EstaEsUnaClaveSuperSecretaDeAlMenos32CaracteresParaJWT"
+      JwtSettings:Issuer: "AtlanticApp.API"
+      JwtSettings:Audience: "AtlanticApp.Clients"
+    volumes:
+     - ./uploads:/app/uploads
+  # ------------------------------------
+  # 4. Microservicio Worker (DataProcessor.Worker)
+  # ------------------------------------
+  dataprocesor-worker:
+    image: dataprocesorworker # Nombre de la imagen construida
+    build:
+      context: .
+      dockerfile: DataProcessor.Worker/Dockerfile
+    container_name: dataprocesor_worker
+    restart: always
+    depends_on:
+      - db
+      - rabbitmq
+    environment:
+      # Cadenas de conexion (usan los nombres de servicio internos: 'db' y 'rabbitmq')
+      ConnectionStrings:DefaultConnection: "Host=db;Port=5432;Database=mydatabase;Username=myuser;Password=mypassword"
+      # RabbitMQ:ConnectionString: "amqp://guest:guest@rabbitmq:5672"
+      rabbitmq__host: "rabbitmq"
+      rabbitmq__port: 5672
+      rabbitmq__username: guest
+      rabbitmq__password: guest
+    volumes:
+    -  ./uploads:/app/uploads
+
+# ------------------------------------
+# 5. Microservicio Worker de Notificaci�n (Notification.Worker)
+# ------------------------------------
+  notification-worker:
+    image: notificationworker # Nombre de la imagen construida
+    build:
+      context: .
+      dockerfile: Notification.Worker/Dockerfile # ASEGURA LA RUTA CORRECTA
+    container_name: notification_worker
+    restart: always
+    depends_on:
+      - db
+      - rabbitmq
+    environment:
+# Cadenas de conexion (usan los nombres de servicio internos: 'db' y 'rabbitmq')
+      ConnectionStrings:DefaultConnection: "Host=db;Port=5432;Database=mydatabase;Username=myuser;Password=mypassword"
+      
+# Configuraci�n de RabbitMQ (para consumir el JobFinishedEvent)
+      rabbitmq__host: "rabbitmq"
+      rabbitmq__port: 5672
+      rabbitmq__username: guest
+      rabbitmq__password: guest
+      
+# CONFIGURACI�N DE CORREO (MAILKIT) 
+# Debes rellenar esto con tus credenciales de SMTP/Mailtrap
+      MailSettings:SmtpHost: "smtp.example.com" # Ej: smtp.mailtrap.io
+      MailSettings:SmtpPort: 587
+      MailSettings:SmtpUser: "user-name"
+      MailSettings:SmtpPass: "password"
+      MailSettings:FromEmail: "no-reply@atlanticapp.com"
+
+volumes:
+  postgres_data:

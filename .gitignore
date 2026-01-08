@@ -1,0 +1,63 @@
+# Archivos de usuario de Visual Studio
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+
+# Carpetas de configuración local
+.vs/
+
+# Resultados de compilación
+bin/
+obj/
+
+# Publicaciones
+publish/
+out/
+
+# Archivos de paquetes NuGet
+*.nupkg
+*.snupkg
+packages/
+*.nuspec
+
+# Logs
+*.log
+
+# Archivos de configuración sensibles
+appsettings.Development.json
+appsettings.Local.json
+
+# Archivos de backup
+*.bak
+
+# Archivos de test
+TestResults/
+*.coverage
+*.coveragexml
+
+# Archivos generados por herramientas
+*.dbmdl
+*.jfm
+*.pdb
+
+# Archivos de sistema
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+# -----------------------------
+# Docker
+# -----------------------------
+# Ignorar archivos de construcción temporales
+*.pid
+*.seed
+*.pid.lock
+
+# Ignorar datos de contenedores
+docker-compose.override.yml
+docker-compose.local.yml
+
+# Ignorar volúmenes montados
+volumes/
+data/
