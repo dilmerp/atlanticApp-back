@@ -10,7 +10,9 @@
 # Resultados de compilación
 bin/
 obj/
-
+.vs/
+.git/
+.env
 # Publicaciones
 publish/
 out/

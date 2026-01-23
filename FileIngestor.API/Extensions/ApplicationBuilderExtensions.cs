@@ -23,8 +23,8 @@ namespace FileIngestor.API.Extensions
                 app.UseSwaggerUI();
             }
 
-            app.UseHttpsRedirection();
-            app.UseAuthorization();
+           // app.UseHttpsRedirection();
+           // app.UseAuthorization();
 
             return app;
         }

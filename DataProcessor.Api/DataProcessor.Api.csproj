@@ -1,0 +1,43 @@
+﻿<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="AspNetCore.HealthChecks.UI.Client" Version="8.0.1" />
+    <PackageReference Include="MediatR" Version="14.0.0" />
+    <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="8.0.5" />
+    <PackageReference Include="Microsoft.Extensions.Caching.StackExchangeRedis" Version="10.0.2" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Common.Domain\Common.Domain.csproj" />
+    <ProjectReference Include="..\Common.Persistence\Common.Persistence.csproj" />
+    <ProjectReference Include="..\DataProcessor.Application\DataProcessor.Application.csproj" />
+    <ProjectReference Include="..\FileIngestor.Infrastructure\FileIngestor.Infrastructure.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\DataProcessor.Worker\DataProcessor.Worker.csproj">
+      <CopyLocalSatelliteAssemblies>false</CopyLocalSatelliteAssemblies>
+      <PrivateAssets>all</PrivateAssets>
+      <PublishContexts>ExcludeFiles</PublishContexts>
+      <ContentFiles />
+      <ExcludeAssets>ContentFiles</ExcludeAssets>
+    </ProjectReference>
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\DataProcessor.Worker\DataProcessor.Worker.csproj">
+      <CopyLocalSatelliteAssemblies>false</CopyLocalSatelliteAssemblies>
+      <PrivateAssets>all</PrivateAssets>
+      <PublishContexts>ExcludeFiles</PublishContexts><ContentFiles /><ExcludeAssets>ContentFiles</ExcludeAssets></ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <None Update="appsettings*.json" CopyToPublishDirectory="Never" />
+  </ItemGroup>
+
+</Project>

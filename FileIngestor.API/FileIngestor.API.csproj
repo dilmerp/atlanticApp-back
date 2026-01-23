@@ -34,8 +34,11 @@
     <PackageReference Include="Swashbuckle.AspNetCore" Version="8.0.4" />
   </ItemGroup>
   <ItemGroup>
+    <Folder Include="Features\CargaMasiva\Commands\" />
+    <Folder Include="Features\CargaMasiva\Handlers\" />
     <Folder Include="Hubs\" />
     <Folder Include="Logs\" />
     <Folder Include="Services\" />
   </ItemGroup>
+  <ProjectExtensions><VisualStudio><UserProperties /></VisualStudio></ProjectExtensions>
 </Project>

@@ -1,0 +1,34 @@
+# Ignorar binarios y artefactos de compilación
+bin/
+obj/
+publish/
+out/
+
+# Ignorar configuraciones locales
+.vs/
+*.user
+*.suo
+
+# Ignorar archivos sensibles
+appsettings.Development.json
+appsettings.Local.json
+
+# Ignorar datos de contenedores
+docker-compose.override.yml
+docker-compose.local.yml
+volumes/
+data/
+
+# Ignorar paquetes NuGet locales
+*.nupkg
+*.snupkg
+packages/
+*.nuspec
+
+# Ignorar logs
+*.log
+
+# Ignorar resultados de test
+TestResults/
+*.coverage
+*.coveragexml

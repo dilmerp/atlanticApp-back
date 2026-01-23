@@ -7,8 +7,7 @@ using System.Text;
 using System.Text.Json;
 using System.Threading.Tasks;
 
-//namespace FileIngestor.Infrastructure.Services
-namespace DataProcessor.Worker
+namespace DataProcessor.Worker.Workers.Services
 {
     public class RabbitMqPublisher : IMessagePublisher, IDisposable
     {

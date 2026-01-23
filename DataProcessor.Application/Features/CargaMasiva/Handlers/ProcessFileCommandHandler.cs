@@ -8,9 +8,11 @@ using FileIngestor.Application.Interfaces;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Caching.Distributed; // Necesario para Redis
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -19,20 +21,23 @@ namespace DataProcessor.Application.Features.CargaMasiva.Handlers
     public class ProcessFileCommandHandler : IRequestHandler<ProcessFileCommand, bool>
     {
         private readonly IApplicationDbContext _context;
-        private readonly IFileDownloadService _fileDownloadService;
+        private readonly HttpClient _httpClient;
         private readonly ILogger<ProcessFileCommandHandler> _logger;
         private readonly IMessagePublisher _messagePublisher;
+        private readonly IDistributedCache _cache; // Inyectamos el caché
 
         public ProcessFileCommandHandler(
             IApplicationDbContext context,
-            IFileDownloadService fileDownloadService,
+            HttpClient httpClient,
             ILogger<ProcessFileCommandHandler> logger,
-            IMessagePublisher messagePublisher)
+            IMessagePublisher messagePublisher,
+            IDistributedCache cache) // Constructor actualizado
         {
             _context = context;
-            _fileDownloadService = fileDownloadService;
+            _httpClient = httpClient;
             _logger = logger;
             _messagePublisher = messagePublisher;
+            _cache = cache;
         }
 
         public async Task<bool> Handle(ProcessFileCommand request, CancellationToken cancellationToken)
@@ -56,88 +61,60 @@ namespace DataProcessor.Application.Features.CargaMasiva.Handlers
 
             try
             {
-                // Validación de período duplicado
-                var existeOtraCarga = await _context.CargaArchivos.AnyAsync(c =>
-                    c.Periodo == carga.Periodo &&
-                    c.Id != carga.Id &&
-                    c.Estado != EstadoCarga.Error,
-                    cancellationToken);
-
-                if (existeOtraCarga)
-                {
-                    carga.Estado = EstadoCarga.Error;
-                    carga.MensajeError = "Ya existe una carga para el período";
-                    await _context.SaveChangesAsync(cancellationToken);
-                    PublicarNotificacion(carga, conErrores: true);
-                    return true;
-                }
-
                 carga.Estado = EstadoCarga.EnProceso;
                 await _context.SaveChangesAsync(cancellationToken);
 
-                ////  BLOQUE DE PRUEBA DIRECTO
-                //var testEntity = new DataProcesada
-                //{
-                //    CodigoProducto = "TEST001",
-                //    NombreProducto = "Producto de prueba",
-                //    Precio = 123.45m,
-                //    Cantidad = 10,
-                //    Periodo = carga.Periodo,
-                //    CargaArchivoId = carga.Id,
-                //    FechaCreacion = DateTime.UtcNow
-                //};
+                var url = $"http://seaweedfs-volume:8080/{carga.FileKey}";
+                var response = await _httpClient.GetAsync(url, cancellationToken);
+                response.EnsureSuccessStatusCode();
 
-                //_context.DataProcesadas.Add(testEntity);
-                //await _context.SaveChangesAsync(cancellationToken);
-
-                //_logger.LogInformation("Registro de prueba insertado en DataProcesada con IdCarga {CargaId}", carga.Id);
-                
-
-                using var fileStream = await _fileDownloadService.DownloadAsync(carga.FileKey, cancellationToken);
-                if (fileStream == null)
-                    throw new Exception($"No se pudo descargar el archivo con FileKey: {carga.FileKey}");
-
+                using var fileStream = await response.Content.ReadAsStreamAsync(cancellationToken);
                 using var workbook = new XLWorkbook(fileStream);
                 var worksheet = workbook.Worksheet(1);
                 var rows = worksheet.RowsUsed().Skip(1);
 
-                var existentes = await _context.DataProcesadas
-                    .Select(p => new { p.CodigoProducto, p.Periodo, p.CargaArchivoId })
+                var existentesEnDBList = await _context.DataProcesadas
+                    .Select(p => $"{p.CodigoProducto}-{p.Periodo}")
                     .ToListAsync(cancellationToken);
 
-                var existentesSet = existentes
-                    .Select(e => $"{e.CodigoProducto}-{e.Periodo}-{e.CargaArchivoId}")
-                    .ToHashSet();
-
+                var existentesEnDBSet = existentesEnDBList.ToHashSet();
                 var nuevasEntidades = new List<DataProcesada>();
+                var erroresDeRegistro = new List<string>();
+                var clavesYaVistasEnEsteArchivo = new HashSet<string>();
 
                 foreach (var row in rows)
                 {
                     if (row.CellsUsed().All(c => c.IsEmpty())) continue;
 
+                    var filaNum = row.RowNumber();
                     var codigoProducto = row.Cell(2).GetString()?.Trim();
-                    if (string.IsNullOrWhiteSpace(codigoProducto))
-                    {
-                        _logger.LogWarning("Fila {RowNumber}: Producto sin código, se omite.", row.RowNumber());
-                        continue;
-                    }
-
                     var nombreProducto = row.Cell(3).GetString() ?? "SIN NOMBRE";
-
                     decimal precio = row.Cell(4).TryGetValue(out decimal p) ? p : 0m;
                     int cantidad = row.Cell(5).TryGetValue(out int c) ? c : 0;
                     var periodo = row.Cell(6).GetString()?.Trim() ?? carga.Periodo;
 
-                    var key = $"{codigoProducto}-{periodo}-{carga.Id}";
-
-                    if (existentesSet.Contains(key))
+                    if (string.IsNullOrWhiteSpace(codigoProducto) || string.IsNullOrWhiteSpace(periodo))
                     {
-                        _logger.LogWarning("Fila {RowNumber}: Producto '{Codigo}' ya existe en periodo {Periodo}, carga {CargaId}. Se omite.",
-                            row.RowNumber(), codigoProducto, periodo, carga.Id);
+                        erroresDeRegistro.Add($"Fila {filaNum}: Código de Producto o Período es inválido.");
                         continue;
                     }
 
-                    var entidad = new DataProcesada
+                    var claveDuplicidad = $"{codigoProducto}-{periodo}";
+
+                    if (clavesYaVistasEnEsteArchivo.Contains(claveDuplicidad))
+                    {
+                        erroresDeRegistro.Add($"Fila {filaNum}: Duplicado interno.");
+                        continue;
+                    }
+                    clavesYaVistasEnEsteArchivo.Add(claveDuplicidad);
+
+                    if (existentesEnDBSet.Contains(claveDuplicidad))
+                    {
+                        erroresDeRegistro.Add($"Fila {filaNum}: Duplicado DB.");
+                        continue;
+                    }
+
+                    nuevasEntidades.Add(new DataProcesada
                     {
                         CodigoProducto = codigoProducto,
                         NombreProducto = nombreProducto,
@@ -146,39 +123,50 @@ namespace DataProcessor.Application.Features.CargaMasiva.Handlers
                         Periodo = periodo,
                         CargaArchivoId = carga.Id,
                         FechaCreacion = DateTime.UtcNow
-                    };
-
-                    nuevasEntidades.Add(entidad);
-                    existentesSet.Add(key);
+                    });
                 }
+
+                bool conErrores = erroresDeRegistro.Any();
+                carga.MensajeError = conErrores
+                    ? $"Carga finalizada con {erroresDeRegistro.Count} registros omitidos."
+                    : string.Empty;
 
                 if (nuevasEntidades.Any())
                 {
                     _context.DataProcesadas.AddRange(nuevasEntidades);
                     await _context.SaveChangesAsync(cancellationToken);
-                    _logger.LogInformation("Se insertaron {Count} nuevas entidades en DataProcesada.", nuevasEntidades.Count);
-                }
-                else
-                {
-                    _logger.LogInformation("No se encontraron nuevas entidades válidas para insertar en DataProcesada.");
+                    _logger.LogInformation("Se insertaron {Count} entidades en DataProcesada.", nuevasEntidades.Count);
+
+                    // ***************************************************************
+                    // INVALIDACIÓN DE CACHÉ REDIS
+                    // ***************************************************************
+                    // Al usar InstanceName "AtlanticApp:" en Program.cs, solo enviamos la llave.
+                    // La llave debe ser la misma que usa DataProcessor.Api para listar.
+                    try
+                    {
+                        await _cache.RemoveAsync("carga_historial_completo", cancellationToken);
+                        _logger.LogInformation(">>> CACHÉ DE REDIS INVALIDADO (Key: carga_historial_completo) <<<");
+                    }
+                    catch (Exception cacheEx)
+                    {
+                        _logger.LogWarning(cacheEx, "No se pudo limpiar el caché de Redis, pero los datos se guardaron.");
+                    }
                 }
 
                 carga.Estado = EstadoCarga.Finalizado;
                 carga.FechaFin = DateTime.UtcNow;
                 await _context.SaveChangesAsync(cancellationToken);
 
-                PublicarNotificacion(carga, conErrores: false);
+                PublicarNotificacion(carga, conErrores);
                 return true;
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error crítico al procesar la carga {CargaId}", carga.Id);
-
+                _logger.LogError(ex, "Error crítico en carga {CargaId}", carga.Id);
                 carga.Estado = EstadoCarga.Error;
-                carga.MensajeError = ex.Message;
+                carga.MensajeError = ex.Message ?? "Error desconocido";
                 await _context.SaveChangesAsync(cancellationToken);
-
-                PublicarNotificacion(carga, conErrores: true);
+                PublicarNotificacion(carga, true);
                 return false;
             }
         }
@@ -193,8 +181,6 @@ namespace DataProcessor.Application.Features.CargaMasiva.Handlers
                 ConErrores = conErrores
             };
 
-            _logger.LogInformation("Publicando JobFinishedEvent para Carga ID {CargaId}. Con Errores: {ConErrores}", carga.Id, conErrores);
-
             _messagePublisher.Publish(
                 exchangeName: "notifications.exchange",
                 routingKey: "notificaciones",
@@ -202,4 +188,3 @@ namespace DataProcessor.Application.Features.CargaMasiva.Handlers
         }
     }
 }
-

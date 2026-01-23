@@ -9,7 +9,8 @@ namespace DataProcessor.Worker
     {
         public Task<Stream> DownloadAsync(string fileKey, CancellationToken cancellationToken)
         {
-            var uploadsFolder = Path.Combine(Directory.GetCurrentDirectory(), "uploads");
+            //var uploadsFolder = Path.Combine(Directory.GetCurrentDirectory(), "uploads");
+            var uploadsFolder = "/app/uploads";
             var filePath = Path.Combine(uploadsFolder, fileKey);
 
             if (!File.Exists(filePath))

@@ -17,4 +17,8 @@
     <ProjectReference Include="..\Common.Domain\Common.Domain.csproj" />
     <ProjectReference Include="..\Common.Persistence\Common.Persistence.csproj" />
   </ItemGroup>
+  <ItemGroup>
+    <None Update="appsettings*.json" CopyToPublishDirectory="Never" />
+  </ItemGroup>
+
 </Project>

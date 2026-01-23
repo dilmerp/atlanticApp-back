@@ -1,10 +1,17 @@
-﻿using Common.Messages;
+﻿using Common.Domain.Entities;
+using Common.Domain.Interfaces;
+using Common.Domain.Enums;
+using Common.Messages;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
+using Notification.Worker.Interfaces;
 using RabbitMQ.Client;
 using RabbitMQ.Client.Events;
 using System.Text;
 using System.Text.Json;
-using System; // Necesario para Exception
+using System;
+using System.Threading.Tasks;
+using Microsoft.Extensions.DependencyInjection; // Para IServiceScopeFactory
 
 namespace Notification.Worker.Consumers
 {
@@ -12,18 +19,23 @@ namespace Notification.Worker.Consumers
     {
         private readonly ILogger<JobFinishedConsumer> _logger;
         private readonly IModel _channel;
+        private readonly IEmailService _emailService;
+        private readonly IServiceScopeFactory _scopeFactory; // CORRECTO: Declaración del campo
 
-        private const string ExchangeName = "jobs.exchange";
-        private const string QueueName = "job.finished.queue";
-        private const string RoutingKey = "job.finished";
+        // Correcciones de Ruteo
+        private const string ExchangeName = "notifications.exchange";
+        private const string QueueName = "notification.finished.queue";
+        private const string RoutingKey = "notificaciones";
 
-        
         public JobFinishedConsumer(
             ILogger<JobFinishedConsumer> logger,
-            IConnection connection) 
+            IConnection connection,
+            IEmailService emailService,
+            IServiceScopeFactory scopeFactory) //  Inyección
         {
             _logger = logger;
-
+            _emailService = emailService;
+            _scopeFactory = scopeFactory; // Asignación
             _channel = connection.CreateModel();
 
             // Configuración de Exchange/Queue/Binding
@@ -58,7 +70,7 @@ namespace Notification.Worker.Consumers
         {
             var consumer = new EventingBasicConsumer(_channel);
 
-            consumer.Received += (model, ea) =>
+            consumer.Received += async (model, ea) =>
             {
                 try
                 {
@@ -71,12 +83,63 @@ namespace Notification.Worker.Consumers
                             PropertyNameCaseInsensitive = true
                         });
 
+                    if (evt == null) throw new InvalidOperationException("Evento deserializado es nulo.");
+
                     _logger.LogInformation(
-                        " Notificación recibida | Usuario: {Email} | Carga: {CargaId} | Error: {ConErrores}",
-                        evt!.UsuarioEmail,
+                        "Notificación recibida | Usuario: {Email} | Carga: {CargaId} | Error: {ConErrores}",
+                        evt.UsuarioEmail,
                         evt.CargaArchivoId,
                         evt.ConErrores);
 
+                    //  INICIO DEL SCOPE: Todo lo que use servicios Scoped (como DbContext) debe ir dentro.
+                    using (var scope = _scopeFactory.CreateScope())
+                    {
+                        // Obtener el DbContext para este mensaje específico
+                        var scopedContext = scope.ServiceProvider.GetRequiredService<IApplicationDbContext>();
+
+                        // 1. Enviar Correo (IEmailService)
+                        await _emailService.SendNotificationAsync(
+                            evt.UsuarioEmail,
+                            evt.CargaArchivoId,
+                            evt.ConErrores);
+
+                        _logger.LogInformation("Correo de notificación enviado para Carga ID: {CargaId}", evt.CargaArchivoId);
+
+                        // 2. Actualizar estado en la base de datos (Usando scopedContext)
+                        var carga = await scopedContext.CargaArchivos //  CORREGIDO: Usando scopedContext
+                            .FirstOrDefaultAsync(c => c.Id == evt.CargaArchivoId);
+
+                        if (carga != null)
+                        {
+                            // LOG DE DEBUGGING CRÍTICO
+                            _logger.LogInformation("DEBUG: Estado actual de Carga {CargaId} antes de actualizar: {Estado}", evt.CargaArchivoId, carga.Estado);
+
+                            if (carga.Estado == EstadoCarga.Finalizado)
+                            {
+                                carga.Estado = EstadoCarga.Notificado;
+                                int rowsAffected = await scopedContext.SaveChangesAsync(); // <-- Capturar resultado
+
+                                if (rowsAffected > 0)
+                                {
+                                    _logger.LogInformation("Estado de Carga ID {CargaId} actualizado a NOTIFICADO. Filas afectadas: {Rows}", evt.CargaArchivoId, rowsAffected);
+                                }
+                                else
+                                {
+                                    _logger.LogWarning("ERROR: SaveChangesAsync no reportó filas afectadas. Puede ser un error de conexión a DB. Carga ID: {CargaId}", evt.CargaArchivoId);
+                                }
+                            }
+                            else if (carga.Estado == EstadoCarga.Error)
+                            {
+                                _logger.LogWarning("La carga {CargaId} está en estado ERROR. Se mantiene el estado.", evt.CargaArchivoId);
+                            }
+                        }
+                        else
+                        {
+                            _logger.LogWarning("CargaArchivo {CargaId} no encontrado.", evt.CargaArchivoId);
+                        }
+                    } // El scope se libera aquí.
+
+                    // Acknowledge (ACK) solo después de completar toda la lógica de negocio
                     _channel.BasicAck(ea.DeliveryTag, multiple: false);
                 }
                 catch (Exception ex)
@@ -84,6 +147,7 @@ namespace Notification.Worker.Consumers
                     _logger.LogError(ex,
                         "Error procesando JobFinishedEvent. Se reencola.");
 
+                    // BasicNack (requeue: true) para reintentar
                     _channel.BasicNack(
                         ea.DeliveryTag,
                         multiple: false,

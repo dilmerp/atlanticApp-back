@@ -3,7 +3,6 @@ using Microsoft.Extensions.Caching.Memory;
 using System;
 using System.Threading.Tasks;
 
-//namespace FileIngestor.Infrastructure.Services
 namespace DataProcessor.Worker
 {
     /// <summary>

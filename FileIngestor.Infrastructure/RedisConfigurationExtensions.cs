@@ -51,7 +51,7 @@ namespace FileIngestor.Infrastructure
                     services.AddStackExchangeRedisCache(opt =>
                     {
                         opt.Configuration = redisConn;
-                        opt.InstanceName = "ComercialApp_";
+                        opt.InstanceName = "AtlanticApp_";
                     });
 
                     

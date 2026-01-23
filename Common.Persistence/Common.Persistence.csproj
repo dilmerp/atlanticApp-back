@@ -28,4 +28,8 @@
     <ProjectReference Include="..\FileIngestor.Application\FileIngestor.Application.csproj" />
     <ProjectReference Include="..\Common.Domain\Common.Domain.csproj" />
   </ItemGroup>
+  <ItemGroup>
+    <None Update="appsettings*.json" CopyToPublishDirectory="Never" />
+  </ItemGroup>
+
 </Project>

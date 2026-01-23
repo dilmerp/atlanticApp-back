@@ -1,46 +1,56 @@
-using FileIngestor.API.Features.CargaMasiva.Commands;
+using FileIngestor.Application.Features.CargaMasiva.Commands;
+using FileIngestor.Application.Features.CargaMasiva.Handlers;
 using FileIngestor.Application.DTO;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
-using System;
 using System.Threading.Tasks;
 
-[ApiController]
-[Route("api/[controller]")]
-public class CargaMasivaController : ControllerBase
+namespace FileIngestor.API.Controllers
 {
-    private readonly ISender _mediator;
-
-    public CargaMasivaController(ISender mediator)
+    [ApiController]
+    [Route("api/[controller]")]
+    public class CargaMasivaController : ControllerBase
     {
-        _mediator = mediator;
-    }
+        private readonly ISender _mediator;
 
-    [HttpPost("upload")]
-    [Consumes("multipart/form-data")]
-    public async Task<IActionResult> UploadFile([FromForm] UploadFileDto dto)
-    {
-        if (dto.File == null || dto.File.Length == 0)
+        public CargaMasivaController(ISender mediator)
         {
-            return BadRequest(new { Message = "Debe enviar un archivo válido." });
+            _mediator = mediator;
         }
 
-        var userEmail = "usuario.actual@empresa.com";
-
-        var command = new UploadFileCommand
+        [HttpPost("upload")]
+        [Consumes("multipart/form-data")]
+        public async Task<IActionResult> UploadFile([FromForm] UploadFileDto dto)
         {
-            File = dto.File,
-            Periodo = dto.Periodo,
-            UsuarioEmail = userEmail
+            // 1. Validaciones de entrada
+            if (dto.File == null || dto.File.Length == 0)
+            {
+                return BadRequest(new { Message = "Debe enviar un archivo válido." });
+            }
 
-        };
+            if (string.IsNullOrEmpty(dto.Periodo))
+            {
+                return BadRequest(new { Message = "El periodo es obligatorio." });
+            }
 
-        int cargaArchivoId = await _mediator.Send(command);
+            // 2. Preparación del comando
+            var userEmail = "usuario.actual@empresa.com";
+            var command = new UploadFileCommand(dto.File, userEmail, dto.Periodo);
 
-        return Ok(new
-        {
-            Message = "Carga registrada y trabajo asíncrono publicado",
-            CargaArchivoId = cargaArchivoId
-        });
+            // 3. Ejecución del comando
+            // 'result' es un objeto de tipo CargaResponseDto { Id, Status, Success }
+            var result = await _mediator.Send(command);
+
+            // 4. Respuesta corregida accediendo a las propiedades del objeto
+            return Ok(new
+            {
+                message = "Carga registrada y trabajo asíncrono publicado",
+                success = result.Success,
+                id = result.Id,       // Accedemos a la propiedad .Id (ej: 101)
+                estado = result.Status // Accedemos a la propiedad .Status (ej: "Pendiente")
+                //periodo = dto.Periodo,
+                //nombreArchivo = dto.File.FileName
+            });
+        }
     }
 }

@@ -1,34 +1,40 @@
 # -----------------------------------------------------------------
-# ETAPA 1: BUILD (Compilaci贸n y Restore de Dependencias)
+# ETAPA 1: BUILD (Compilaci髇)
 # -----------------------------------------------------------------
 FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
 WORKDIR /src
 
-# Copiamos todo el contenido de la soluci贸n. 
+# Copiamos todo el contenido de la soluci髇. 
 COPY . .
 
-# Restaurar sobre la soluci贸n completa
+# Restaurar sobre la soluci髇 completa
 RUN dotnet restore "AtlanticApp.sln"
 
-# Copiar el c贸digo fuente restante para la compilaci贸n/publicaci贸n
+# Copiar el c骴igo fuente restante para la compilaci髇/publicaci髇
 # COPY . .
-WORKDIR "/src/FileIngestor.API"
-RUN dotnet build "FileIngestor.API.csproj" -c Release -o /app/build
-# -----------------------------------------------------------------
-# ETAPA 2: PUBLISH
-# -----------------------------------------------------------------
-FROM build AS publish
-# WORKDIR /src/FileIngestor.API
-RUN dotnet publish "FileIngestor.API.csproj" -c Release -o /app/publish /p:UseAppHost=false
+WORKDIR "/src/DataProcessor.Api"
+RUN dotnet build "DataProcessor.Api.csproj" -c Release -o /app/build
 
 # -----------------------------------------------------------------
-# ETAPA 3: FINAL (Runtime)
+# ETAPA 2: PUBLISH (Publicaci髇)
+# -----------------------------------------------------------------
+FROM build AS publish
+# WORKDIR /src/DataProcessor.Api
+RUN dotnet publish "DataProcessor.Api.csproj" -c Release -o /app/publish /p:UseAppHost=false
+
+
+# -----------------------------------------------------------------
+# ETAPA 3: FINAL (Runtime - Imagen ligera para ejecuci髇)
 # -----------------------------------------------------------------
 FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS final
 WORKDIR /app
 
+# Ajuste para .NET 8: Usamos el puerto 8080 (no privilegiado)
+
+# EXPOSE 80 
 EXPOSE 8080
 ENV ASPNETCORE_URLS=http://+:8080
 
+# Copiamos solo lo necesario desde la etapa de publicaci髇
 COPY --from=publish /app/publish .
-ENTRYPOINT ["dotnet", "FileIngestor.API.dll"]
+ENTRYPOINT ["dotnet", "DataProcessor.Api.dll"]

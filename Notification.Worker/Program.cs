@@ -1,18 +1,19 @@
+using Common.Domain.Interfaces;
+using Common.Persistence.Data;
+using Common.Persistence.Repositories;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.Configuration;
+using Notification.Worker.Configurations;
 using Notification.Worker.Consumers;
+using Notification.Worker.Interfaces;
+using Notification.Worker.Services;
 using Notification.Worker.Workers;
 using RabbitMQ.Client;
 using RabbitMQ.Client.Exceptions; 
-using Microsoft.EntityFrameworkCore;
 using System;
 using System.Threading.Tasks; 
-using Common.Domain.Interfaces;
-using Common.Persistence.Repositories;
-using Notification.Worker.Interfaces;
-using Notification.Worker.Services;
-using Notification.Worker.Configurations;
 
 // Parámetros RabbitMQ
 const int maxRetries = 10;
@@ -92,8 +93,18 @@ IHost host = hostBuilder
         string connectionString = configuration.GetConnectionString("DefaultConnection")
                                  ?? throw new InvalidOperationException("DefaultConnection no configurado.");
 
-        services.AddSingleton<IJobStatusRepository, JobStatusRepository>();
+        // 1. Registro del DbContext como Scoped (Ciclo de vida estándar)
+        services.AddDbContext<AppDbContext>(options =>
+        {
+            options.UseNpgsql(connectionString,
+                // Usar la asamblea correcta para las migraciones
+                b => b.MigrationsAssembly(typeof(Common.Persistence.Repositories.JobStatusRepository).Assembly.FullName));
+        });
 
+        // 2. Registro del IApplicationDbContext (interfaz) para inyección, usando el contexto concreto.
+        services.AddScoped<IApplicationDbContext>(provider => provider.GetRequiredService<AppDbContext>());
+
+        // Otros servicios y Worker
         services.AddSingleton<IEmailService, EmailService>();
         services.AddSingleton<JobFinishedConsumer>();
         services.AddHostedService<NotificationWorker>();

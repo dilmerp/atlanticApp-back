@@ -16,4 +16,8 @@
   <ItemGroup>
     <ProjectReference Include="..\FileIngestor.Application\FileIngestor.Application.csproj" />
   </ItemGroup>
+  <ItemGroup>
+    <None Update="appsettings*.json" CopyToPublishDirectory="Never" />
+  </ItemGroup>
+
 </Project>

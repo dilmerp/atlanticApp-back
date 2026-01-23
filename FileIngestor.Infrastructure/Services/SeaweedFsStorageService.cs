@@ -6,6 +6,7 @@ using System.Net.Http;
 using System.Net.Http.Json;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Text.Json.Serialization;
 
 namespace FileIngestor.Infrastructure.Services
 {
@@ -49,6 +50,13 @@ namespace FileIngestor.Infrastructure.Services
         }
 
         // DTOs internos para el servicio
-        private record AssignResponse(string Fid, string Url, long PublicUrl);
+        //private record AssignResponse(string Fid, string Url, long PublicUrl);
+        private record AssignResponse(
+        [property: JsonPropertyName("fid")] string Fid,
+        [property: JsonPropertyName("url")] string Url,
+        [property: JsonPropertyName("publicUrl")] string PublicUrl,
+        [property: JsonPropertyName("count")] int Count
+);
+
     }
 }

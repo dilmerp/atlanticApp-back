@@ -16,4 +16,9 @@
     <ProjectReference Include="..\DataProcessor.Application\DataProcessor.Application.csproj" />
     <ProjectReference Include="..\DataProcessor.Infrastructure\DataProcessor.Infrastructure.csproj" />
   </ItemGroup>
+  <ItemGroup>
+    <None Update="appsettings*.json" CopyToOutputDirectory="Never" CopyToPublishDirectory="Never" />
+  </ItemGroup>
+
+
 </Project>
