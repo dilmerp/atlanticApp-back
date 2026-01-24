@@ -33,9 +33,9 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DataProcessor.Api", "DataPr
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FileIngestor.Application.UnitTests", "FileIngestor.Application.UnitTests\FileIngestor.Application.UnitTests.csproj", "{3C036373-3E41-4191-8EF3-AEBC39410CF6}"
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "docs", "docs", "{8E179007-F08F-4D0F-981C-8CC30E676054}"
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "docs", "docs", "{4AE711AC-0E03-449B-8386-C05B8129164D}"
 	ProjectSection(SolutionItems) = preProject
-		docs\architecture.png = docs\architecture.png
+		..\..\architecture.png = ..\..\architecture.png
 	EndProjectSection
 EndProject
 Global
@@ -186,6 +186,7 @@ Global
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
 		{02EA681E-C7D8-13C7-8484-4AC65E1B71E8} = {D107F4C8-89CC-BEA8-D3D7-CA6B7733353D}
+		{4AE711AC-0E03-449B-8386-C05B8129164D} = {D107F4C8-89CC-BEA8-D3D7-CA6B7733353D}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {528644C3-30F7-48BE-A726-73DE1959972D}
