@@ -72,3 +72,4 @@ Para monitorear la caché en tiempo real:
 docker exec -it redis_cache redis-cli -a Peru2412 MONITOR
 
 ![Diagrama de Arquitectura](FileIngestor.API/docs/architecture.png)
+![Diagrama de Arquitectura](https://github.com/dilmerp/atlanticApp-back/blob/main/FileIngestor.API/docs/architecture.png?raw=true)
