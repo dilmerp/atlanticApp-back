@@ -39,8 +39,8 @@ DB_NAME=mydatabase
 POSTGRES_TAG=15-alpine
 
 # Mensajería
-RABBIT_USER=guest
-RABBIT_PASS=guest
+RABBIT_USER=1234
+RABBIT_PASS=1234
 
 # Almacenamiento
 SEAWEED_MASTER=seaweedfs-master:9333
@@ -56,7 +56,7 @@ DataProcessor API: http://localhost:8082
 
 RabbitMQ Management: http://localhost:15672 (guest/guest)
 
-Redis: localhost:6379 (Password: Peru2412)
+Redis: localhost:6379 (Password: Peru1234)
 
 SeaweedFS Master: http://localhost:9333
 ⚡ Estrategia de Caché (Redis)
