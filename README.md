@@ -15,12 +15,13 @@ El sistema está compuesto por los siguientes servicios:
 ---
 
 ## 🛠️ Tecnologías utilizadas
-- **Framework:** .NET 8
-- **Base de Datos:** PostgreSQL 15
-- **Caché:** Redis (StackExchange.Redis)
-- **Mensajería:** RabbitMQ (MassTransit / RabbitMQ.Client)
-- **Almacenamiento:** SeaweedFS
-- **Contenedores:** Docker & Docker Compose
+
+![.NET](https://img.shields.io/badge/.NET-8.0-512BD4?logo=dotnet&logoColor=white)
+![PostgreSQL](https://img.shields.io/badge/PostgreSQL-15-336791?logo=postgresql&logoColor=white)
+![Redis](https://img.shields.io/badge/Redis-StackExchange.Redis-DC382D?logo=redis&logoColor=white)
+![RabbitMQ](https://img.shields.io/badge/RabbitMQ-MassTransit%20%2F%20Client-FF6600?logo=rabbitmq&logoColor=white)
+![SeaweedFS](https://img.shields.io/badge/SeaweedFS-Storage-2E8B57?logo=files&logoColor=white)
+![Docker](https://img.shields.io/badge/Docker-Compose-2496ED?logo=docker&logoColor=white)
 
 ---
 
@@ -74,5 +75,4 @@ docker exec -it redis_cache redis-cli -a Peru2412 MONITOR
 
 ```
 
-![Diagrama de Arquitectura](docs/architecture.png)
 
