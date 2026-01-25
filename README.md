@@ -3,6 +3,7 @@
 Este repositorio contiene el ecosistema de microservicios para la carga, procesamiento y notificación de archivos Excel, optimizado con caché distribuida y almacenamiento de objetos.
 
 ## 🚀 Arquitectura del Proyecto
+![Diagrama de Arquitectura](docs/architecture.png)
 
 El sistema está compuesto por los siguientes servicios:
 * **FileIngestor.API**: Puerta de entrada para la carga de archivos y gestión inicial.
@@ -72,6 +73,4 @@ Para monitorear la caché en tiempo real:
 docker exec -it redis_cache redis-cli -a Peru2412 MONITOR
 
 ![Diagrama de Arquitectura](docs/architecture.png)
-![Diagrama de Arquitectura](https://raw.githubusercontent.com/dilmerp/atlanticApp-back/main/docs/architecture.png)
-![Diagrama de Arquitectura](FileIngestor.API/docs/architecture.png)
 
