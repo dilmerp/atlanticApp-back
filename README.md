@@ -73,3 +73,5 @@ docker exec -it redis_cache redis-cli -a Peru2412 MONITOR
 
 ![Diagrama de Arquitectura](docs/architecture.png)
 ![Diagrama de Arquitectura](https://raw.githubusercontent.com/dilmerp/atlanticApp-back/main/docs/architecture.png)
+![Diagrama de Arquitectura](FileIngestor.API/docs/architecture.png)
+
