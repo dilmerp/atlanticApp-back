@@ -72,5 +72,7 @@ Al finalizar el procesamiento, el DataProcessor.Worker vuelve a invalidar para a
 Para monitorear la caché en tiempo real:
 docker exec -it redis_cache redis-cli -a Peru2412 MONITOR
 
+```
+
 ![Diagrama de Arquitectura](docs/architecture.png)
 
