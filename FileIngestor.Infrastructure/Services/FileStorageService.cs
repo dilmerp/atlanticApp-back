@@ -18,7 +18,6 @@ namespace FileIngestor.Infrastructure.Services
         public async Task<string> SaveFileAsync(IFormFile file, CancellationToken cancellationToken)
         {
             
-            //var uploadsFolder = Path.Combine(Directory.GetCurrentDirectory(), "uploads");
             var uploadsFolder = "/app/uploads";
             Directory.CreateDirectory(uploadsFolder);
 

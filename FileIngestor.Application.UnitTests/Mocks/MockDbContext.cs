@@ -12,10 +12,6 @@ namespace FileIngestor.Application.UnitTests.Mocks
         {
             var mockContext = new Mock<IApplicationDbContext>();
 
-            // Si necesitas que el Mock devuelva una lista inicial de archivos:
-            // var data = new List<CargaArchivo>().AsQueryable();
-            // mockContext.Setup(m => m.CargaArchivos).ReturnsDbSet(data);
-
             return mockContext;
         }
     }

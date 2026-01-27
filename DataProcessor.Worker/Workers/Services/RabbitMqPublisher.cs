@@ -1,4 +1,4 @@
-﻿using FileIngestor.Application.Interfaces; // IMessagePublisher
+﻿using FileIngestor.Application.Interfaces; 
 using Common.Messages;
 using Microsoft.Extensions.Configuration;
 using RabbitMQ.Client;
@@ -14,7 +14,7 @@ namespace DataProcessor.Worker.Workers.Services
         private readonly IConnection _connection;
         private readonly IModel _channel;
 
-        private const string ExchangeName = "jobs.exchange"; // Exchange para JobCreatedEvent (API -> DataProcessor)
+        private const string ExchangeName = "jobs.exchange";
         private const string RoutingKey = "FileProcessingQueue";
 
         public RabbitMqPublisher(IConfiguration configuration)

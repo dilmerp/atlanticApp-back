@@ -99,22 +99,21 @@ try
     builder.Services.AddSignalR();
 
     // --- CONFIGURACIÓN DE REDIS CORREGIDA ---
-    // Intentamos leer de ConnectionStrings o de la variable de entorno Redis__RedisConnection
     var redisConn = configuration.GetConnectionString("RedisConnection")
                     ?? configuration["Redis:RedisConnection"]
-                    ?? "redis:6379,password=Peru2412,abortConnect=false"; // Respaldo usando el nombre del servicio 'redis'
+                    ?? "redis:6379,password=Peru2412,abortConnect=false"; 
 
     builder.Services.AddStackExchangeRedisCache(options =>
     {
         options.Configuration = redisConn;
-        options.InstanceName = "AtlanticApp:"; // Importante: incluir los dos puntos finales
+        options.InstanceName = "AtlanticApp:"; 
     });
 
     Log.Information("Servicios de Redis (IDistributedCache) configurados correctamente con InstanceName: AtlanticApp:");
 
     var app = builder.Build();
 
-    // --- 3. PIPELINE DE MIDDLEWARES (EL ORDEN ES CRÍTICO) ---
+    // --- 3. PIPELINE DE MIDDLEWARES 
 
     // Manejo global de excepciones
     app.UseMiddleware<ExceptionMiddleware>();

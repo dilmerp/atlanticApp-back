@@ -1,0 +1,314 @@
+# =========================
+# PostgreSQL atlanticapp-stack.yaml
+# =========================
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: postgres-db
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: postgres-db
+  template:
+    metadata:
+      labels:
+        app: postgres-db
+    spec:
+      containers:
+      - name: postgres
+        image: postgres:15-alpine
+        ports:
+        - containerPort: 5432
+        env:
+        - name: POSTGRES_USER
+          value: myuser
+        - name: POSTGRES_PASSWORD
+          value: mypassword
+        - name: POSTGRES_DB
+          value: atlanticdb
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: postgres-db
+spec:
+  selector:
+    app: postgres-db
+  ports:
+    - port: 5432
+      targetPort: 5432
+  type: ClusterIP
+
+# =========================
+# Redis
+# =========================
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: redis-cache
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: redis-cache
+  template:
+    metadata:
+      labels:
+        app: redis-cache
+    spec:
+      containers:
+      - name: redis
+        image: redis:alpine
+        ports:
+        - containerPort: 6379
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: redis-cache
+spec:
+  selector:
+    app: redis-cache
+  ports:
+    - port: 6379
+      targetPort: 6379
+  type: ClusterIP
+
+# =========================
+# RabbitMQ
+# =========================
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: rabbitmq-broker
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: rabbitmq-broker
+  template:
+    metadata:
+      labels:
+        app: rabbitmq-broker
+    spec:
+      containers:
+      - name: rabbitmq
+        image: rabbitmq:3.12-management-alpine
+        ports:
+        - containerPort: 5672
+        - containerPort: 15672
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: rabbitmq-broker
+spec:
+  selector:
+    app: rabbitmq-broker
+  ports:
+    - port: 5672
+      targetPort: 5672
+    - port: 15672
+      targetPort: 15672
+  type: ClusterIP
+
+# =========================
+# FileIngestor API
+# =========================
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: fileingestor-api
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: fileingestor-api
+  template:
+    metadata:
+      labels:
+        app: fileingestor-api
+    spec:
+      containers:
+      - name: fileingestor-api
+        image: dilmerp/fileingestor-api:latest
+        ports:
+        - containerPort: 8080
+        env:
+        - name: ConnectionStrings__DefaultConnection
+          value: "Host=postgres-db;Database=atlanticdb;Username=myuser;Password=mypassword"
+        - name: Redis__ConnectionString
+          value: "redis-cache:6379"
+        - name: RabbitMQ__Host
+          value: "rabbitmq-broker"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: fileingestor-api-service
+spec:
+  selector:
+    app: fileingestor-api
+  ports:
+    - port: 8081
+      targetPort: 8080
+  type: ClusterIP
+
+# =========================
+# DataProcessor API
+# =========================
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: dataprocesor-api
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: dataprocesor-api
+  template:
+    metadata:
+      labels:
+        app: dataprocesor-api
+    spec:
+      containers:
+      - name: dataprocesor-api
+        image: dilmerp/dataprocesor-api:latest
+        ports:
+        - containerPort: 8080
+        env:
+        - name: ConnectionStrings__DefaultConnection
+          value: "Host=postgres-db;Database=atlanticdb;Username=myuser;Password=mypassword"
+        - name: Redis__ConnectionString
+          value: "redis-cache:6379"
+        - name: RabbitMQ__Host
+          value: "rabbitmq-broker"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: dataprocesor-api-service
+spec:
+  selector:
+    app: dataprocesor-api
+  ports:
+    - port: 8082
+      targetPort: 8080
+  type: ClusterIP
+
+# =========================
+# Workers
+# =========================
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: dataprocesor-worker
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: dataprocesor-worker
+  template:
+    metadata:
+      labels:
+        app: dataprocesor-worker
+    spec:
+      containers:
+      - name: dataprocesor-worker
+        image: dilmerp/dataprocesor-worker:latest
+        env:
+        - name: RabbitMQ__Host
+          value: "rabbitmq-broker"
+        - name: Redis__ConnectionString
+          value: "redis-cache:6379"
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: notification-worker
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: notification-worker
+  template:
+    metadata:
+      labels:
+        app: notification-worker
+    spec:
+      containers:
+      - name: notification-worker
+        image: dilmerp/notification-worker:latest
+        env:
+        - name: RabbitMQ__Host
+          value: "rabbitmq-broker"
+
+# =========================
+# Frontend
+# =========================
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: atlanticapp-front
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: atlanticapp-front
+  template:
+    metadata:
+      labels:
+        app: atlanticapp-front
+    spec:
+      containers:
+      - name: atlanticapp-front
+        image: dilmerp/atlanticapp-front:latest
+        ports:
+        - containerPort: 3000
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: atlanticapp-front-service
+spec:
+  selector:
+    app: atlanticapp-front
+  ports:
+    - port: 80
+      targetPort: 3000
+  type: ClusterIP
+
+# =========================
+# Ingress
+# =========================
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: atlanticapp-ingress
+spec:
+  rules:
+  - host: atlanticapp.local
+    http:
+      paths:
+      - path: /api/fileingestor
+        pathType: Prefix
+        backend:
+          service:
+            name: fileingestor-api-service
+            port:
+              number: 8081
+      - path: /api/dataprocesor
+        pathType: Prefix
+        backend:
+          service:
+            name: dataprocesor-api-service
+            port:
+              number: 8082
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: atlanticapp-front-service
+            port:
+              number: 80

@@ -4,11 +4,10 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Common.Domain.Interfaces;
-using DataProcessor.Application.Features.CargaMasiva.Queries; // Importante: para ver la Query y el DTO
+using DataProcessor.Application.Features.CargaMasiva.Queries; 
 
 namespace DataProcessor.Application.Features.CargaMasiva.Handlers
 {
-    // El IRequestHandler DEBE coincidir con el IRequest de la Query (sin el '?' en el tipo TResponse)
     public class GetCargaStatusQueryHandler : IRequestHandler<GetCargaStatusQuery, CargaStatusDto?>
     {
         private readonly IApplicationDbContext _context;

@@ -12,7 +12,7 @@ namespace FileIngestor.Infrastructure
         public static IServiceCollection AddInfrastructure(this IServiceCollection services, IConfiguration configuration)
         {
             // --- Servicios de Infraestructura ---
-services.AddRedisServices(configuration); 
+            services.AddRedisServices(configuration); 
             services.AddMemoryCache();
             services.AddTransient<ICacheService, MemoryCacheService>();
             services.AddTransient<IDistributedCache, MemoryDistributedCache>(); 

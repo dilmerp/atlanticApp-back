@@ -1,8 +1,4 @@
-﻿// *******************************************************************
-// RUTA: ComercialApp.Application/Interfaces/ICommand.cs
-// TAREA: Define la interfaz de marcado para Commands que devuelven un valor.
-// *******************************************************************
-using MediatR;
+﻿using MediatR;
 
 namespace FileIngestor.Application.Interfaces
 {

@@ -10,7 +10,7 @@ namespace DataProcessor.Infrastructure.Services
     public class SeaweedFsDownloadService
     {
         private readonly HttpClient _httpClient;
-        private readonly string _volumeUrl; // URL del Volume Server de SeaweedFS
+        private readonly string _volumeUrl; 
 
         public SeaweedFsDownloadService(HttpClient httpClient, IConfiguration configuration)
         {

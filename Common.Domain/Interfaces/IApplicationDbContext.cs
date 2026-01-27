@@ -18,7 +18,7 @@ namespace Common.Domain.Interfaces
         /// <summary>
         /// Acceso a la colección (tabla) de CargaArchivo para el seguimiento de trabajos.
         /// </summary>
-        DbSet<CargaArchivo> CargaArchivos { get; set; } //  Exponemos el DbSet de la entidad clave
+        DbSet<CargaArchivo> CargaArchivos { get; set; } 
         DbSet<DataProcesada> DataProcesadas { get; set; }
 
         // ----------------------------------------------------------------------

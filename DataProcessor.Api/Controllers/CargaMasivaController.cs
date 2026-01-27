@@ -16,14 +16,9 @@ public class CargaMasivaController : ControllerBase
         _mediator = mediator;
     }
 
-
-
-
-    // --- ESTE ES EL MÉTODO QUE FALTA ---
-    [HttpGet("historial")]
+[HttpGet("historial")]
     public async Task<ActionResult<IEnumerable<CargaStatusDto>>> GetHistorial()
     {
-        // Debes tener un Query en Application llamado GetCargaHistorialQuery
         var result = await _mediator.Send(new GetCargaHistorialQuery());
         return Ok(result);
     }

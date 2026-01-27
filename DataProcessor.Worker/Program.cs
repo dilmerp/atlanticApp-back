@@ -25,7 +25,7 @@ IHost host = hostBuilder
     {
         IConfiguration configuration = hostContext.Configuration;
 
-        // --- CONFIGURACIÓN DE REDIS (NECESARIA PARA INVALIDAR CACHÉ) ---
+        // --- CONFIGURACIÓN DE REDIS ---
         // Usamos el host 'redis' que es el nombre del servicio en docker-compose
         var redisConn = configuration["Redis:RedisConnection"]
                         ?? "redis:6379,password=Peru2412,abortConnect=false";

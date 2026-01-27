@@ -1,6 +1,4 @@
-﻿// DataProcessor.Application/Features/Data/Handlers/GetDataProcesadaQueryHandler.cs
-
-using Common.Domain.Entities;
+﻿using Common.Domain.Entities;
 using Common.Domain.Interfaces;
 using DataProcessor.Application.Features.Data.Queries;
 using MediatR;

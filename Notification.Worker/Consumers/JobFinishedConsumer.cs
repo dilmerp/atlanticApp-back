@@ -11,7 +11,7 @@ using System.Text;
 using System.Text.Json;
 using System;
 using System.Threading.Tasks;
-using Microsoft.Extensions.DependencyInjection; // Para IServiceScopeFactory
+using Microsoft.Extensions.DependencyInjection; 
 
 namespace Notification.Worker.Consumers
 {
@@ -20,7 +20,7 @@ namespace Notification.Worker.Consumers
         private readonly ILogger<JobFinishedConsumer> _logger;
         private readonly IModel _channel;
         private readonly IEmailService _emailService;
-        private readonly IServiceScopeFactory _scopeFactory; // CORRECTO: Declaración del campo
+        private readonly IServiceScopeFactory _scopeFactory; 
 
         // Correcciones de Ruteo
         private const string ExchangeName = "notifications.exchange";
@@ -31,11 +31,11 @@ namespace Notification.Worker.Consumers
             ILogger<JobFinishedConsumer> logger,
             IConnection connection,
             IEmailService emailService,
-            IServiceScopeFactory scopeFactory) //  Inyección
+            IServiceScopeFactory scopeFactory) 
         {
             _logger = logger;
             _emailService = emailService;
-            _scopeFactory = scopeFactory; // Asignación
+            _scopeFactory = scopeFactory; 
             _channel = connection.CreateModel();
 
             // Configuración de Exchange/Queue/Binding
@@ -106,7 +106,7 @@ namespace Notification.Worker.Consumers
                         _logger.LogInformation("Correo de notificación enviado para Carga ID: {CargaId}", evt.CargaArchivoId);
 
                         // 2. Actualizar estado en la base de datos (Usando scopedContext)
-                        var carga = await scopedContext.CargaArchivos //  CORREGIDO: Usando scopedContext
+                        var carga = await scopedContext.CargaArchivos 
                             .FirstOrDefaultAsync(c => c.Id == evt.CargaArchivoId);
 
                         if (carga != null)
@@ -117,7 +117,7 @@ namespace Notification.Worker.Consumers
                             if (carga.Estado == EstadoCarga.Finalizado)
                             {
                                 carga.Estado = EstadoCarga.Notificado;
-                                int rowsAffected = await scopedContext.SaveChangesAsync(); // <-- Capturar resultado
+                                int rowsAffected = await scopedContext.SaveChangesAsync(); 
 
                                 if (rowsAffected > 0)
                                 {

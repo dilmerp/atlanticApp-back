@@ -4,7 +4,7 @@
 FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
 WORKDIR /src
 
-# Copiamos todo el contenido de la solución. 
+# Copiar todo el contenido de la solución. 
 COPY . .
 
 # Restaurar sobre la solución completa

@@ -8,6 +8,6 @@
     public interface IRepositoryAsync<TEntity> : IGenericRepository<TEntity, int> where TEntity : class
     {
         // Aquí puede agregar métodos específicos para todos los repositorios si los necesita.
-        // Por ahora, solo extiende el repositorio genérico con TId = int.
+        
     }
 }

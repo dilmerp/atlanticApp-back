@@ -58,7 +58,7 @@ services:
       JwtSettings__Audience: "AtlanticApp.Clients"
       SeaweedFs__MasterUrl: "http://seaweedfs-master:9333"
 
-  # 4. Microservicio Worker (DataProcessor.Worker) - AHORA CON REDIS
+  # 4. Microservicio Worker (DataProcessor.Worker) 
   dataprocesor-worker:
     build:
       context: .

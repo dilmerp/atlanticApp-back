@@ -8,7 +8,7 @@ using FileIngestor.Application.Interfaces;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Caching.Distributed; // Necesario para Redis
+using Microsoft.Extensions.Caching.Distributed; 
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -24,14 +24,14 @@ namespace DataProcessor.Application.Features.CargaMasiva.Handlers
         private readonly HttpClient _httpClient;
         private readonly ILogger<ProcessFileCommandHandler> _logger;
         private readonly IMessagePublisher _messagePublisher;
-        private readonly IDistributedCache _cache; // Inyectamos el caché
+        private readonly IDistributedCache _cache; 
 
         public ProcessFileCommandHandler(
             IApplicationDbContext context,
             HttpClient httpClient,
             ILogger<ProcessFileCommandHandler> logger,
             IMessagePublisher messagePublisher,
-            IDistributedCache cache) // Constructor actualizado
+            IDistributedCache cache) 
         {
             _context = context;
             _httpClient = httpClient;
@@ -137,11 +137,6 @@ namespace DataProcessor.Application.Features.CargaMasiva.Handlers
                     await _context.SaveChangesAsync(cancellationToken);
                     _logger.LogInformation("Se insertaron {Count} entidades en DataProcesada.", nuevasEntidades.Count);
 
-                    // ***************************************************************
-                    // INVALIDACIÓN DE CACHÉ REDIS
-                    // ***************************************************************
-                    // Al usar InstanceName "AtlanticApp:" en Program.cs, solo enviamos la llave.
-                    // La llave debe ser la misma que usa DataProcessor.Api para listar.
                     try
                     {
                         await _cache.RemoveAsync("carga_historial_completo", cancellationToken);

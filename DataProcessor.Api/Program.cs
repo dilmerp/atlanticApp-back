@@ -92,7 +92,7 @@ try
 
     var app = builder.Build();
 
-    // --- PIPELINE DE MIDDLEWARE (ORDEN CRÍTICO) ---
+    // --- PIPELINE DE MIDDLEWARE ---
 
     if (app.Environment.IsDevelopment())
     {
@@ -105,14 +105,10 @@ try
         c.RoutePrefix = "swagger";
     });
 
-    // EL ORDEN AQUÍ ES LO QUE SOLUCIONA EL ERROR DE ANGULAR
     app.UseRouting();
-
-    // CORS debe ir SIEMPRE entre Routing y MapControllers
     app.UseCors(MiPoliticaCORS);
-
     app.UseAuthorization();
-
+    
     app.MapHealthChecks("/health/live", new HealthCheckOptions
     {
         Predicate = check => check.Tags.Contains("live"),

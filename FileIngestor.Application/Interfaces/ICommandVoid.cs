@@ -1,8 +1,4 @@
-﻿// *******************************************************************
-// RUTA: ComercialApp.Application/Interfaces/ICommandVoid.cs
-// TAREA: Define la interfaz de marcado para Commands que no devuelven un valor.
-// *******************************************************************
-using MediatR;
+﻿using MediatR;
 
 namespace FileIngestor.Application.Interfaces
 {

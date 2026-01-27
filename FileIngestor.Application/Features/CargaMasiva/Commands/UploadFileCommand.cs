@@ -10,7 +10,6 @@ namespace FileIngestor.Application.Features.CargaMasiva.Commands
             string Periodo
      ) : IRequest<CargaResponseDto>;
 
-    // Definimos la estructura de lo que queremos devolver al controlador
     public class CargaResponseDto
     {
         public int Id { get; set; }

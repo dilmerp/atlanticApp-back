@@ -38,7 +38,6 @@ namespace FileIngestor.API.Controllers
             var command = new UploadFileCommand(dto.File, userEmail, dto.Periodo);
 
             // 3. Ejecución del comando
-            // 'result' es un objeto de tipo CargaResponseDto { Id, Status, Success }
             var result = await _mediator.Send(command);
 
             // 4. Respuesta corregida accediendo a las propiedades del objeto
@@ -46,10 +45,8 @@ namespace FileIngestor.API.Controllers
             {
                 message = "Carga registrada y trabajo asíncrono publicado",
                 success = result.Success,
-                id = result.Id,       // Accedemos a la propiedad .Id (ej: 101)
-                estado = result.Status // Accedemos a la propiedad .Status (ej: "Pendiente")
-                //periodo = dto.Periodo,
-                //nombreArchivo = dto.File.FileName
+                id = result.Id,       
+                estado = result.Status
             });
         }
     }

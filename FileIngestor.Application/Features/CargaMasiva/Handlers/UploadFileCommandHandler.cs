@@ -6,7 +6,7 @@ using Common.Messages;
 using FileIngestor.Application.Features.CargaMasiva.Commands;
 using FileIngestor.Application.Interfaces;
 using MediatR;
-using Microsoft.Extensions.Caching.Distributed; // IMPORTANTE: Para Redis
+using Microsoft.Extensions.Caching.Distributed; 
 using System;
 using System.Threading;
 using System.Threading.Tasks;
@@ -18,13 +18,13 @@ namespace FileIngestor.Application.Features.CargaMasiva.Handlers
         private readonly IJobStatusRepository _jobStatusRepository;
         private readonly IFileUploadService _fileStorageService;
         private readonly IMessagePublisher _messagePublisher;
-        private readonly IDistributedCache _cache; // Inyectamos el caché
+        private readonly IDistributedCache _cache; 
 
         public UploadFileCommandHandler(
             IJobStatusRepository jobStatusRepository,
             IFileUploadService fileStorageService,
             IMessagePublisher messagePublisher,
-            IDistributedCache cache) // Añadimos al constructor
+            IDistributedCache cache) 
         {
             _jobStatusRepository = jobStatusRepository;
             _fileStorageService = fileStorageService;
@@ -82,8 +82,6 @@ namespace FileIngestor.Application.Features.CargaMasiva.Handlers
             await _messagePublisher.PublishJobCreatedEventAsync(jobEvent);
 
             // --- 5. INVALIDACIÓN DE CACHÉ DE REDIS ---
-            // IMPORTANTE: La llave debe ser idéntica a la usada en el QueryHandler
-            // Al borrarla, forzamos a que el historial se refresque en la siguiente consulta
             string cacheKey = "carga_historial_completo";
             await _cache.RemoveAsync(cacheKey, cancellationToken);
 

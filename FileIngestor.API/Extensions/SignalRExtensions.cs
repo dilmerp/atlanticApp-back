@@ -1,5 +1,4 @@
-﻿//using ComercialApp.API.Hubs;
-using Microsoft.AspNetCore.Builder;
+﻿using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Routing;
 
 namespace FileIngestor.API.Extensions

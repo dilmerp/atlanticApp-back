@@ -16,10 +16,8 @@ using FileIngestor.API.Authorizations;
 using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore.Metadata.Internal;
-
-// USINGS AÑADIDOS PARA EL REGISTRO DE MENSAJERÍA
-using FileIngestor.Application.Interfaces; // Para IMessagePublisher
-using FileIngestor.Infrastructure.Services; // Para RabbitMqPublisher
+using FileIngestor.Application.Interfaces; 
+using FileIngestor.Infrastructure.Services;
 
 namespace FileIngestor.API.Extensions
 {
@@ -124,7 +122,6 @@ namespace FileIngestor.API.Extensions
             return services;
         }
 
-        
         public static IServiceCollection AddRateLimiterServices(this IServiceCollection services, IConfiguration configuration)
         {
             services.AddRateLimiter(options =>

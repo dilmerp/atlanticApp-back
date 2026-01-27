@@ -3,7 +3,7 @@ using DataProcessor.Application.Features.CargaMasiva.Commands;
 using DataProcessor.Infrastructure.Interfaces;
 using MediatR;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging; // ¡AÑADIDO!
+using Microsoft.Extensions.Logging; 
 using RabbitMQ.Client;
 using RabbitMQ.Client.Events;
 using System.Text;
@@ -18,20 +18,20 @@ namespace DataProcessor.Infrastructure.Services
         private readonly IServiceScopeFactory _scopeFactory;
         private readonly IConnection _connection;
         private readonly IModel _channel;
-        private readonly ILogger<RabbitMQConsumer> _logger; // ¡AÑADIDO!
+        private readonly ILogger<RabbitMQConsumer> _logger; 
 
         private const string ExchangeName = "jobs.exchange";
         private const string QueueName = "FileProcessingQueue";
 
-        // Constructor CORREGIDO: Inyección de ILogger
+        
         public RabbitMQConsumer(
             IConnection connection,
             IServiceScopeFactory scopeFactory,
-            ILogger<RabbitMQConsumer> logger) // ¡AÑADIDO!
+            ILogger<RabbitMQConsumer> logger) 
         {
             _connection = connection ?? throw new ArgumentNullException(nameof(connection));
             _scopeFactory = scopeFactory ?? throw new ArgumentNullException(nameof(scopeFactory));
-            _logger = logger ?? throw new ArgumentNullException(nameof(logger)); // ¡ASIGNACIÓN!
+            _logger = logger ?? throw new ArgumentNullException(nameof(logger)); 
 
             _channel = _connection.CreateModel();
             InitializeRabbitMQ();

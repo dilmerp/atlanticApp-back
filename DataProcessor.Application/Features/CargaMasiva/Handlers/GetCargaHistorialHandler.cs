@@ -1,7 +1,7 @@
 ﻿using Common.Domain.Interfaces;
 using DataProcessor.Application.Features.CargaMasiva.Queries;
 using MediatR;
-using Microsoft.EntityFrameworkCore; // Indispensable para AsNoTracking y ToListAsync
+using Microsoft.EntityFrameworkCore; 
 using Microsoft.Extensions.Caching.Distributed;
 using System.Text.Json;
 using System.Collections.Generic;
@@ -31,7 +31,7 @@ public class GetCargaHistorialHandler : IRequestHandler<GetCargaHistorialQuery, 
     {
         string cacheKey = "carga_historial_completo";
 
-        // Intento leer de Redis
+        // Leer de Redis
         var cachedData = await _cache.GetStringAsync(cacheKey, cancellationToken);
 
         if (!string.IsNullOrEmpty(cachedData))
@@ -39,7 +39,7 @@ public class GetCargaHistorialHandler : IRequestHandler<GetCargaHistorialQuery, 
             return JsonSerializer.Deserialize<IEnumerable<CargaStatusDto>>(cachedData, _jsonOptions)!;
         }
 
-        // Consulta a Base de Datos con AsNoTracking (ahora funcionará)
+        // Consulta a Base de Datos con AsNoTracking 
         var historial = await _context.CargaArchivos
             .AsNoTracking()
             .OrderByDescending(x => x.FechaRegistro)

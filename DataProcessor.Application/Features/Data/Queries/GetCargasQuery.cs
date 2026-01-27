@@ -1,6 +1,4 @@
-﻿// DataProcessor.Application/Features/Data/Queries/GetCargasQuery.cs
-
-using Common.Domain.Entities;
+﻿using Common.Domain.Entities;
 using MediatR;
 using System.Collections.Generic;
 
