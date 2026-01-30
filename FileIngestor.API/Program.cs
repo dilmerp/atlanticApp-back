@@ -150,6 +150,23 @@ try
         ResponseWriter = UIResponseWriter.WriteHealthCheckUIResponse
     });
 
+    // --- BLOQUE PARA MIGRACIONES AUTOMÁTICAS ---
+    using (var scope = app.Services.CreateScope())
+    {
+        var services = scope.ServiceProvider;
+        try
+        {
+            var context = services.GetRequiredService<AppDbContext>();
+            Log.Information("Aplicando migraciones en la base de datos...");
+            context.Database.Migrate();
+            Log.Information("Migraciones aplicadas con éxito.");
+        }
+        catch (Exception ex)
+        {
+            Log.Error(ex, "Ocurrió un error al aplicar las migraciones.");
+        }
+    }
+
     app.Run();
 }
 catch (Exception ex)

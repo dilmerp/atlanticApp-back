@@ -7,8 +7,9 @@ using DataProcessor.Application.Features.CargaMasiva.Commands;
 using FileIngestor.Application.Interfaces;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Caching.Distributed; 
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -24,20 +25,23 @@ namespace DataProcessor.Application.Features.CargaMasiva.Handlers
         private readonly HttpClient _httpClient;
         private readonly ILogger<ProcessFileCommandHandler> _logger;
         private readonly IMessagePublisher _messagePublisher;
-        private readonly IDistributedCache _cache; 
+        private readonly IDistributedCache _cache;
+        private readonly IConfiguration _configuration;
 
         public ProcessFileCommandHandler(
             IApplicationDbContext context,
             HttpClient httpClient,
             ILogger<ProcessFileCommandHandler> logger,
             IMessagePublisher messagePublisher,
-            IDistributedCache cache) 
+            IDistributedCache cache,
+            IConfiguration configuration) 
         {
             _context = context;
             _httpClient = httpClient;
             _logger = logger;
             _messagePublisher = messagePublisher;
             _cache = cache;
+            _configuration = configuration;
         }
 
         public async Task<bool> Handle(ProcessFileCommand request, CancellationToken cancellationToken)
@@ -64,7 +68,12 @@ namespace DataProcessor.Application.Features.CargaMasiva.Handlers
                 carga.Estado = EstadoCarga.EnProceso;
                 await _context.SaveChangesAsync(cancellationToken);
 
-                var url = $"http://seaweedfs-volume:8080/{carga.FileKey}";
+                var baseUrl = _configuration["SeaweedFs:FilerUrl"] ?? "http://seaweedfs:8080";
+
+                //var url = $"http://seaweedfs-volume:8080/{carga.FileKey}";
+                var url = $"{baseUrl.TrimEnd('/')}/{carga.FileKey}";
+                _logger.LogInformation("Descargando archivo desde: {Url}", url);
+
                 var response = await _httpClient.GetAsync(url, cancellationToken);
                 response.EnsureSuccessStatusCode();
 

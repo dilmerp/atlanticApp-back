@@ -149,6 +149,18 @@ services:
     command: redis-server --requirepass Peru2412
     ports:
       - "6379:6379"
+  # 10. Frontend Angular 19 (Ubicado en carpeta hermana)
+  atlantic-front:
+    build:
+      context: ../atlanticApp-front
+      dockerfile: Dockerfile
+    container_name: atlantic_front
+    restart: always
+    ports:
+      - "4200:80"
+    depends_on:
+      - fileingestor-api
+      - dataprocesor-api
 
 volumes:
   postgres_data:
